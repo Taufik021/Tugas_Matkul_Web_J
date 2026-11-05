@@ -1,5 +1,9 @@
 <?php
 $daftarAlat = $daftarAlat ?? [];
+$kategoriAktif = trim((string) ($_GET['kategori'] ?? ''));
+$kategoriTersedia = array_values(array_unique(array_column(getDataMenu(), 'category')));
+$alatPilihan = $daftarAlat[3] ?? $daftarAlat[0] ?? null;
+$escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -66,17 +70,17 @@ $daftarAlat = $daftarAlat ?? [];
 
         <div class="relative mx-auto w-full max-w-[510px]">
           <div class="relative overflow-hidden rounded-[32px] bg-[#e9ede4] p-4 shadow-2xl">
-            <?php if (!empty($daftarAlat[3])): ?>
-              <img src="<?= $daftarAlat[3]->getImageUrl(); ?>" alt="Mesin Molen" class="h-[390px] w-full rounded-[24px] bg-white object-cover">
+            <?php if ($alatPilihan): ?>
+              <img src="<?= $escape($alatPilihan->getImageUrl()); ?>" alt="<?= $escape($alatPilihan->getName()); ?>" class="h-[390px] w-full rounded-[24px] bg-white object-cover">
             <?php endif; ?>
             <div class="absolute bottom-8 left-8 right-8 rounded-2xl border border-white/70 bg-white/95 p-5 shadow-xl backdrop-blur">
               <p class="text-xs font-bold uppercase tracking-[1.5px] text-[#e88b36]">Alat pilihan proyek</p>
               <div class="mt-1 flex items-end justify-between gap-3">
                 <div>
-                  <p class="text-xl font-extrabold text-[#183a32]"><?= $daftarAlat[3]->getName() ?? 'Mesin Molen Beton'; ?></p>
+                  <p class="text-xl font-extrabold text-[#183a32]"><?= $alatPilihan ? $escape($alatPilihan->getName()) : 'Alat Bangunan'; ?></p>
                   <p class="text-sm text-[#65756c]">Mulai dari</p>
                 </div>
-                <p class="text-lg font-extrabold text-[#183a32]"><?= $daftarAlat[3]->getHargaFormatted() ?? 'Rp250rb'; ?><span class="text-xs font-medium text-[#65756c]">/hari</span></p>
+                <p class="text-lg font-extrabold text-[#183a32]"><?= $alatPilihan ? $escape($alatPilihan->getHargaFormatted()) : '—'; ?><span class="text-xs font-medium text-[#65756c]">/hari</span></p>
               </div>
             </div>
           </div>
@@ -93,33 +97,43 @@ $daftarAlat = $daftarAlat ?? [];
           <p class="text-[#65756c]">Harga ditampilkan per hari. Data dirender dinamis dari Model melalui Controller.</p>
         </div>
 
+        <nav class="mb-8 flex flex-wrap justify-center gap-2" aria-label="Filter kategori alat">
+          <a class="rounded-full px-4 py-2 font-bold <?= $kategoriAktif === '' ? 'bg-[#183a32] text-white' : 'bg-[#f7f8f4] text-[#53645c]'; ?>" href="index.php#alat">Semua</a>
+          <?php foreach ($kategoriTersedia as $kategori): ?>
+            <a class="rounded-full px-4 py-2 font-bold <?= $kategoriAktif === $kategori ? 'bg-[#183a32] text-white' : 'bg-[#f7f8f4] text-[#53645c]'; ?>" href="?kategori=<?= urlencode($kategori); ?>#alat"><?= $escape($kategori); ?></a>
+          <?php endforeach; ?>
+        </nav>
+
         <!-- GRID OBJECT -->
-        <div class="grid grid-cols-3 gap-[25px] max-[800px]:grid-cols-1">
+        <div class="grid grid-cols-2 gap-[25px] lg:grid-cols-3 max-[600px]:grid-cols-1">
           <?php foreach ($daftarAlat as $alat): ?>
             <article class="bg-white rounded-[14px] overflow-hidden shadow-[0_6px_20px_rgba(30,50,90,0.08)] flex flex-col justify-between">
               <div>
-                <img src="<?= $alat->getImageUrl(); ?>" alt="<?= $alat->getName(); ?>" class="h-48 w-full bg-[#f8fafc] object-contain p-2" loading="lazy">
-                <a href="<?= $alat->getImageSource(); ?>" target="_blank" class="block border-b border-[#edf0e9] bg-[#f8f9f6] px-4 py-2 text-xs text-[#65756c] underline hover:text-[#183a32]">
+                <img src="<?= $escape($alat->getImageUrl()); ?>" alt="<?= $escape($alat->getName()); ?>" class="h-48 w-full bg-[#f8fafc] object-contain p-2" loading="lazy">
+                <a href="<?= $escape($alat->getImageSource()); ?>" target="_blank" rel="noopener noreferrer" class="block border-b border-[#edf0e9] bg-[#f8f9f6] px-4 py-2 text-xs text-[#65756c] underline hover:text-[#183a32]">
                   Sumber foto: Wikimedia Commons
                 </a>
               </div>
               <div class="p-[25px] flex flex-1 flex-col justify-between">
                 <div>
-                  <p class="mb-1 text-xs font-extrabold uppercase tracking-[1.4px] text-[#e88b36]"><?= $alat->getCategory(); ?></p>
-                  <h3 class="mb-[10px] text-[21px] font-bold text-[#183a32]"><?= $alat->getName(); ?></h3>
-                  <p class="text-[#69758a] mb-[15px] text-sm leading-6 min-h-[50px]"><?= $alat->getDescription(); ?></p>
+                  <p class="mb-1 text-xs font-extrabold uppercase tracking-[1.4px] text-[#e88b36]"><?= $escape($alat->getCategory()); ?></p>
+                  <h3 class="mb-[10px] text-[21px] font-bold text-[#183a32]"><?= $escape($alat->getName()); ?></h3>
+                  <p class="text-[#69758a] mb-[15px] text-sm leading-6 min-h-[50px]"><?= $escape($alat->getDescription()); ?></p>
                 </div>
                 <div>
                   <strong class="block text-[#1f3c88] mb-5">
-                    Mulai <?= $alat->getHargaFormatted(); ?>/hari
+                    Mulai <?= $escape($alat->getHargaFormatted()); ?>/hari
                   </strong>
-                  <a href="#kontak" class="inline-block no-underline rounded-lg font-bold bg-[#f39c12] text-white py-[10px] px-[14px] text-[14px] transition hover:bg-[#d98200]">
-                    Tanya Informasi
+                  <a href="index.php?action=show&amp;id=<?= $alat->getId(); ?>" class="inline-block no-underline rounded-lg font-bold bg-[#f39c12] text-white py-[10px] px-[14px] text-[14px] transition hover:bg-[#d98200]">
+                    Lihat Detail
                   </a>
                 </div>
               </div>
             </article>
           <?php endforeach; ?>
+          <?php if ($daftarAlat === []): ?>
+            <p class="col-span-full rounded-2xl bg-[#f7f8f4] p-8 text-center font-semibold text-[#65756c]">Belum ada alat pada kategori ini.</p>
+          <?php endif; ?>
         </div>
       </div>
     </section>
@@ -182,7 +196,7 @@ $daftarAlat = $daftarAlat ?? [];
               <select class="mt-2 w-full rounded-xl border border-[#dfe5dc] bg-white px-4 py-3 font-normal outline-none focus:border-[#35634f]">
                 <option value="">Pilih alat dari katalog</option>
                 <?php foreach ($daftarAlat as $alat): ?>
-                  <option value="<?= $alat->getId(); ?>"><?= $alat->getName(); ?> — <?= $alat->getHargaFormatted(); ?>/hari</option>
+                  <option value="<?= $alat->getId(); ?>"><?= $escape($alat->getName()); ?> — <?= $escape($alat->getHargaFormatted()); ?>/hari</option>
                 <?php endforeach; ?>
               </select>
             </label>
